@@ -1,9 +1,10 @@
 import inline as inline
 import matplotlib
 import pandas as pd
+pd.options.mode.chained_assignment = None  # default='warn'
 import numpy as np
 import matplotlib.pyplot as plt
-%matplotlib inline
+#%matplotlib inline
 from matplotlib.pylab import rcParams
 rcParams['figure.figsize']=20,10
 from keras.models import Sequential
@@ -27,12 +28,11 @@ for i in range(0, len(data)):
     new_dataset["Close"][i] = data["Close"][i]
 
 # 5. Normalize the new filtered dataset:
-scaler = MinMaxScaler(feature_range=(0, 1))
+new_dataset.index = new_dataset.Date
+new_dataset.drop("Date", axis=1, inplace=True)
 final_dataset = new_dataset.values
 train_data = final_dataset[0:987, :]
 valid_data = final_dataset[987:, :]
-new_dataset.index = new_dataset.Date
-new_dataset.drop("Date", axis=1, inplace=True)
 scaler = MinMaxScaler(feature_range=(0, 1))
 scaled_data = scaler.fit_transform(final_dataset)
 x_train_data, y_train_data = [], []
