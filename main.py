@@ -12,18 +12,18 @@ from keras.layers import LSTM, Dense
 from sklearn.preprocessing import MinMaxScaler
 
 # Read the dataset
-df = pd.read_csv("NSE-Tata-Global-Beverages-Limited.csv")
-df.head()
+dataFrame = pd.read_csv("NSE-Tata-Global-Beverages-Limited.csv")
+dataFrame.head()
 
 # Analyze the closing prices from dataframe
-df["Date"] = pd.to_datetime(df.Date, format="%Y-%m-%d")
-df.index = df['Date']
-plt.figure(figsize=(16, 8))
-plt.plot(df["Close"], label='Close Price history')
+dataFrame["Date"] = pd.to_datetime(dataFrame.Date, format="%Y-%m-%d")
+dataFrame.index = dataFrame['Date']
+plt.figure(figsize=(20, 10))
+plt.plot(dataFrame["Close"], label='Close Price history')
 
 # Sort the dataset on date time and filter “Date” and “Close” columns:
-data = df.sort_index(ascending=True, axis=0)
-new_dataset = pd.DataFrame(index=range(0, len(df)), columns=['Date', 'Close'])
+data = dataFrame.sort_index(ascending=True, axis=0)
+new_dataset = pd.DataFrame(index=range(0, len(dataFrame)), columns=['Date', 'Close'])
 for i in range(0, len(data)):
     new_dataset["Date"][i] = data['Date'][i]
     new_dataset["Close"][i] = data["Close"][i]
