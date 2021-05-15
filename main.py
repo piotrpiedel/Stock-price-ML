@@ -17,12 +17,12 @@ dataFrame.head()
 
 # Analyze the closing prices from dataframe
 dataFrame["Date"] = pd.to_datetime(dataFrame.Date, format="%Y-%m-%d")
-dataFrame.index = dataFrame['Date'] # x axis for plot
-plt.figure(figsize=(20, 10)) # size of plot
+dataFrame.index = dataFrame['Date']  # x axis for plot
+plt.figure(figsize=(20, 10))  # size of plot
 plt.plot(dataFrame["Close"], label='Close Price history')
 
 # Sort the dataset on date time and filter “Date” and “Close” columns:
-data = dataFrame.sort_index(ascending=True, axis=0)
+data = dataFrame.sort_index(ascending=True)
 new_dataset = pd.DataFrame(index=range(0, len(dataFrame)), columns=['Date', 'Close'])
 for i in range(0, len(data)):
     new_dataset["Date"][i] = data['Date'][i]
@@ -30,7 +30,7 @@ for i in range(0, len(data)):
 
 # 5. Normalize the new filtered dataset:
 new_dataset.index = new_dataset.Date
-new_dataset.drop("Date", axis=1, inplace=True)
+new_dataset.drop("Date", axis=1, inplace=True)  # remove  column date normalization
 final_dataset = new_dataset.values
 train_data = final_dataset[0:987, :]
 valid_data = final_dataset[987:, :]
