@@ -17,8 +17,8 @@ dataFrame.head()
 
 # Analyze the closing prices from dataframe
 dataFrame["Date"] = pd.to_datetime(dataFrame.Date, format="%Y-%m-%d")
-dataFrame.index = dataFrame['Date']
-plt.figure(figsize=(20, 10))
+dataFrame.index = dataFrame['Date'] # x axis for plot
+plt.figure(figsize=(20, 10)) # size of plot
 plt.plot(dataFrame["Close"], label='Close Price history')
 
 # Sort the dataset on date time and filter “Date” and “Close” columns:
