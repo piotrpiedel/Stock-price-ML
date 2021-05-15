@@ -1,24 +1,25 @@
-import inline as inline
-import matplotlib
 import pandas as pd
+
 pd.options.mode.chained_assignment = None  # default='warn'
 import numpy as np
 import matplotlib.pyplot as plt
-#%matplotlib inline
+# %matplotlib inline
 from matplotlib.pylab import rcParams
-rcParams['figure.figsize']=20,10
+
+rcParams['figure.figsize'] = 20, 10
 from keras.models import Sequential
-from keras.layers import LSTM,Dropout,Dense
+from keras.layers import LSTM, Dense
 from sklearn.preprocessing import MinMaxScaler
 
-#Read the dataset
-df=pd.read_csv("NSE-Tata-Global-Beverages-Limited.csv")
+# Read the dataset
+df = pd.read_csv("NSE-Tata-Global-Beverages-Limited.csv")
 df.head()
-#Analyze the closing prices from dataframe
-df["Date"]=pd.to_datetime(df.Date,format="%Y-%m-%d")
-df.index=df['Date']
-plt.figure(figsize=(16,8))
-plt.plot(df["Close"],label='Close Price history')
+
+# Analyze the closing prices from dataframe
+df["Date"] = pd.to_datetime(df.Date, format="%Y-%m-%d")
+df.index = df['Date']
+plt.figure(figsize=(16, 8))
+plt.plot(df["Close"], label='Close Price history')
 
 # Sort the dataset on date time and filter “Date” and “Close” columns:
 data = df.sort_index(ascending=True, axis=0)
