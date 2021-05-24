@@ -25,23 +25,29 @@ plotParameters['figure.figsize'] = 20, 10
 dataFrame = pandas.read_csv(DATA_SOURCE)
 dataFrame.head()
 
-# Analyze the closing prices from dataframe
-dataFrame[DATE_COLUMN] = pandas.to_datetime(dataFrame.Date, format=FORMAT_DATE)
-dataFrame.index = dataFrame['Date']  # x axis for plot
-pyplot.figure(figsize=(20, 10))  # size of plot
-pyplot.plot(dataFrame[CLOSE_COLUMN], label=PLOT_LABEL)
 
-# Sort the dataset on date time and filter “Date” and “Close” columns:
-data = dataFrame.sort_index(ascending=True)
-newDataset = pandas.DataFrame(index=range(0, len(dataFrame)), columns=[DATE_COLUMN, CLOSE_COLUMN])
-for i in range(0, len(data)):
-    newDataset[DATE_COLUMN][i] = data[DATE_COLUMN][i]
-    newDataset[CLOSE_COLUMN][i] = data[CLOSE_COLUMN][i]
+# Analyze the closing prices from dataframe
+def prepareDataset():
+    dataFrame[DATE_COLUMN] = pandas.to_datetime(dataFrame.Date, format=FORMAT_DATE)
+    dataFrame.index = dataFrame['Date']  # x axis for plot
+
+
+def displayDataset():
+    pyplot.figure(figsize=(20, 10))  # size of plot
+    pyplot.plot(dataFrame[CLOSE_COLUMN], label=PLOT_LABEL)
+
+
+def createRawDataFrame():
+    dataset = pandas.DataFrame(index=range(0, len(dataFrame)), columns=[DATE_COLUMN, CLOSE_COLUMN])
+    for i in range(0, len(data)):
+        dataset[DATE_COLUMN][i] = data[DATE_COLUMN][i]
+        dataset[CLOSE_COLUMN][i] = data[CLOSE_COLUMN][i]
+    return dataset
 
 
 def normalizeInput():
     newDataset.index = newDataset.Date
-    newDataset.drop(DATE_COLUMN, axis=1, inplace=True)  # remove  column date normalization
+    newDataset.drop(DATE_COLUMN, axis=1, inplace=True)
     dataset = newDataset.values
     data_train = dataset[0:DATA_RANGE, :]
     valid_data = dataset[DATA_RANGE:, :]
@@ -50,15 +56,11 @@ def normalizeInput():
     return data_train, scaled_data, valid_data, min_max_scaler
 
 
-# 5. Normalize the new filtered dataset:
-trainData, scaledData, validData, minMaxScaler = normalizeInput()
-
-xTrainData, yTrainData = [], []
-for i in range(SEQUENCE_LENGTH, len(trainData)):
-    xTrainData.append(scaledData[i - SEQUENCE_LENGTH:i, 0])
-    yTrainData.append(scaledData[i, 0])
-xTrainData, yTrainData = numpy.array(xTrainData), numpy.array(yTrainData)
-xTrainData = numpy.reshape(xTrainData, (xTrainData.shape[0], xTrainData.shape[1], 1))
+def prepareTimeSeriesForModel(xTrain, yTrain, trainLength):
+    for i in range(SEQUENCE_LENGTH, trainLength):
+        xTrain.append(scaledData[i - SEQUENCE_LENGTH:i, 0])
+        yTrain.append(scaledData[i, 0])
+    return xTrain, yTrain
 
 
 def buildLstmModel():
@@ -68,6 +70,45 @@ def buildLstmModel():
     model.add(Dense(1))
     return model
 
+
+def prepareDataForModelValidation(input_data):
+    x_test = []
+    for i in range(SEQUENCE_LENGTH, input_data.shape[0]):
+        x_test.append(input_data[i - SEQUENCE_LENGTH:i, 0])
+    x_test = numpy.array(x_test)
+    x_test = numpy.reshape(x_test, (x_test.shape[0], x_test.shape[1], 1))
+    return x_test
+
+
+def predictClosingPrice(model):
+    predicted = model.predict(xTest)
+    predicted = minMaxScaler.inverse_transform(predicted)
+    return predicted
+
+
+def configureDataForPredictionChart(dataset, predicted):
+    train = dataset[:DATA_RANGE]
+    valid = dataset[DATA_RANGE:]
+    valid[PREDICTIONS] = predicted
+    return train, valid
+
+
+def displayPredictionChart(train, valid):
+    pyplot.plot(train[CLOSE_COLUMN])
+    pyplot.plot(valid[[CLOSE_COLUMN, PREDICTIONS]])
+
+
+prepareDataset()
+displayDataset()
+# Sort the dataset on date time and filter “Date” and “Close” columns:
+data = dataFrame.sort_index(ascending=True)
+newDataset = createRawDataFrame()
+# 5. Normalize the new filtered dataset:
+trainData, scaledData, validData, minMaxScaler = normalizeInput()
+xTrainData, yTrainData = [], []
+prepareTimeSeriesForModel(xTrainData, yTrainData, len(trainData))
+xTrainData, yTrainData = numpy.array(xTrainData), numpy.array(yTrainData)
+xTrainData = numpy.reshape(xTrainData, (xTrainData.shape[0], xTrainData.shape[1], 1))
 
 # 6. Build and train the LSTM model:
 lstmModel = buildLstmModel()
@@ -79,19 +120,13 @@ lstmModel.fit(xTrainData, yTrainData, epochs=1, batch_size=1, verbose=2)
 
 # 7. Take a sample of a dataset to make stock price predictions using the LSTM model:
 xTest = []
-for i in range(SEQUENCE_LENGTH, inputData.shape[0]):
-    xTest.append(inputData[i - SEQUENCE_LENGTH:i, 0])
-xTest = numpy.array(xTest)
-xTest = numpy.reshape(xTest, (xTest.shape[0], xTest.shape[1], 1))
-predictedClosingPrice = lstmModel.predict(xTest)
-predictedClosingPrice = minMaxScaler.inverse_transform(predictedClosingPrice)
+prepareDataForModelValidation(inputData)
+
+predictedClosingPrice = predictClosingPrice(lstmModel)
 
 # 8. Save the LSTM model:
 lstmModel.save(MODEL_OUTPUT_FILE)
 
 # 9. Visualize the predicted stock costs with actual stock costs:
-trainData = newDataset[:DATA_RANGE]
-validData = newDataset[DATA_RANGE:]
-validData[PREDICTIONS] = predictedClosingPrice
-pyplot.plot(trainData[CLOSE_COLUMN])
-pyplot.plot(validData[[CLOSE_COLUMN, PREDICTIONS]])
+trainData, validData = configureDataForPredictionChart(newDataset, predictedClosingPrice)
+displayPredictionChart(trainData, validData)
