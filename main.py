@@ -48,16 +48,18 @@ xTrainData, yTrainData = [], []
 for i in range(60, len(trainData)):
     xTrainData.append(scaledData[i - 60:i, 0])
     yTrainData.append(scaledData[i, 0])
-
 xTrainData, yTrainData = numpy.array(xTrainData), numpy.array(yTrainData)
 xTrainData = numpy.reshape(xTrainData, (xTrainData.shape[0], xTrainData.shape[1], 1))
 
-# 6. Build and train the LSTM model:
-lstmModel = Sequential()
-lstmModel.add(LSTM(units=UNITS, return_sequences=True, input_shape=(xTrainData.shape[1], 1)))
-lstmModel.add(LSTM(units=UNITS))
-lstmModel.add(Dense(1))
+def buildLstmModel():
+    model = Sequential()
+    model.add(LSTM(units=UNITS, return_sequences=True, input_shape=(xTrainData.shape[1], 1)))
+    model.add(LSTM(units=UNITS))
+    model.add(Dense(1))
+    return model
 
+# 6. Build and train the LSTM model:
+lstmModel = buildLstmModel()
 inputData = newDataset[len(newDataset) - len(validData) - 60:].values
 inputData = inputData.reshape(-1, 1)
 inputData = minMaxScaler.transform(inputData)
