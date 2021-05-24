@@ -1,5 +1,3 @@
-import pandas as pandas
-
 FORMAT_DATE = "%Y-%m-%d"
 DATA_SOURCE = "NSE-Tata-Global-Beverages-Limited.csv"
 CLOSE_COLUMN = "Close"
@@ -7,17 +5,19 @@ DATE_COLUMN = "Date"
 PREDICTIONS = "Predictions"
 UNITS = 70
 MODEL_OUTPUT_FILE = "saved_model.h5"
+PLOT_LABEL = 'Close Price history'
+
+import pandas as pandas
 
 pandas.options.mode.chained_assignment = None  # default='warn'
 import numpy as numpy
 import matplotlib.pyplot as pyplot
-# %matplotlib inline
-from matplotlib.pylab import rcParams
-
-rcParams['figure.figsize'] = 20, 10
+from matplotlib.pylab import rcParams as plotParameters
 from keras.models import Sequential
 from keras.layers import LSTM, Dense
 from sklearn.preprocessing import MinMaxScaler
+
+plotParameters['figure.figsize'] = 20, 10
 
 # Read the dataset
 dataFrame = pandas.read_csv(DATA_SOURCE)
@@ -27,7 +27,7 @@ dataFrame.head()
 dataFrame[DATE_COLUMN] = pandas.to_datetime(dataFrame.Date, format=FORMAT_DATE)
 dataFrame.index = dataFrame['Date']  # x axis for plot
 pyplot.figure(figsize=(20, 10))  # size of plot
-pyplot.plot(dataFrame[CLOSE_COLUMN], label='Close Price history')
+pyplot.plot(dataFrame[CLOSE_COLUMN], label=PLOT_LABEL)
 
 # Sort the dataset on date time and filter “Date” and “Close” columns:
 data = dataFrame.sort_index(ascending=True)
@@ -36,14 +36,19 @@ for i in range(0, len(data)):
     newDataset[DATE_COLUMN][i] = data[DATE_COLUMN][i]
     newDataset[CLOSE_COLUMN][i] = data[CLOSE_COLUMN][i]
 
+def normalizeInput():
+    newDataset.index = newDataset.Date
+    newDataset.drop(DATE_COLUMN, axis=1, inplace=True)  # remove  column date normalization
+    dataset = newDataset.values
+    data_train = dataset[0:987, :]
+    valid_data = dataset[987:, :]
+    min_max_scaler = MinMaxScaler(feature_range=(0, 1))
+    scaled_data = min_max_scaler.fit_transform(dataset)
+    return data_train, scaled_data, valid_data, min_max_scaler
+
 # 5. Normalize the new filtered dataset:
-newDataset.index = newDataset.Date
-newDataset.drop(DATE_COLUMN, axis=1, inplace=True)  # remove  column date normalization
-finalDataset = newDataset.values
-trainData = finalDataset[0:987, :]
-validData = finalDataset[987:, :]
-minMaxScaler = MinMaxScaler(feature_range=(0, 1))
-scaledData = minMaxScaler.fit_transform(finalDataset)
+trainData, scaledData, validData, minMaxScaler = normalizeInput()
+
 xTrainData, yTrainData = [], []
 for i in range(60, len(trainData)):
     xTrainData.append(scaledData[i - 60:i, 0])
