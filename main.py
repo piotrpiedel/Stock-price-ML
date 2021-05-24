@@ -3,9 +3,11 @@ DATA_SOURCE = "NSE-Tata-Global-Beverages-Limited.csv"
 CLOSE_COLUMN = "Close"
 DATE_COLUMN = "Date"
 PREDICTIONS = "Predictions"
-UNITS = 70
 MODEL_OUTPUT_FILE = "saved_model.h5"
 PLOT_LABEL = 'Close Price history'
+UNITS = 70
+DATA_RANGE = 987
+SEQUENCE_LENGTH = 60
 
 import pandas as pandas
 
@@ -36,25 +38,28 @@ for i in range(0, len(data)):
     newDataset[DATE_COLUMN][i] = data[DATE_COLUMN][i]
     newDataset[CLOSE_COLUMN][i] = data[CLOSE_COLUMN][i]
 
+
 def normalizeInput():
     newDataset.index = newDataset.Date
     newDataset.drop(DATE_COLUMN, axis=1, inplace=True)  # remove  column date normalization
     dataset = newDataset.values
-    data_train = dataset[0:987, :]
-    valid_data = dataset[987:, :]
+    data_train = dataset[0:DATA_RANGE, :]
+    valid_data = dataset[DATA_RANGE:, :]
     min_max_scaler = MinMaxScaler(feature_range=(0, 1))
     scaled_data = min_max_scaler.fit_transform(dataset)
     return data_train, scaled_data, valid_data, min_max_scaler
+
 
 # 5. Normalize the new filtered dataset:
 trainData, scaledData, validData, minMaxScaler = normalizeInput()
 
 xTrainData, yTrainData = [], []
-for i in range(60, len(trainData)):
-    xTrainData.append(scaledData[i - 60:i, 0])
+for i in range(SEQUENCE_LENGTH, len(trainData)):
+    xTrainData.append(scaledData[i - SEQUENCE_LENGTH:i, 0])
     yTrainData.append(scaledData[i, 0])
 xTrainData, yTrainData = numpy.array(xTrainData), numpy.array(yTrainData)
 xTrainData = numpy.reshape(xTrainData, (xTrainData.shape[0], xTrainData.shape[1], 1))
+
 
 def buildLstmModel():
     model = Sequential()
@@ -63,9 +68,10 @@ def buildLstmModel():
     model.add(Dense(1))
     return model
 
+
 # 6. Build and train the LSTM model:
 lstmModel = buildLstmModel()
-inputData = newDataset[len(newDataset) - len(validData) - 60:].values
+inputData = newDataset[len(newDataset) - len(validData) - SEQUENCE_LENGTH:].values
 inputData = inputData.reshape(-1, 1)
 inputData = minMaxScaler.transform(inputData)
 lstmModel.compile(loss='mean_squared_error', optimizer='adam')
@@ -73,8 +79,8 @@ lstmModel.fit(xTrainData, yTrainData, epochs=1, batch_size=1, verbose=2)
 
 # 7. Take a sample of a dataset to make stock price predictions using the LSTM model:
 xTest = []
-for i in range(60, inputData.shape[0]):
-    xTest.append(inputData[i - 60:i, 0])
+for i in range(SEQUENCE_LENGTH, inputData.shape[0]):
+    xTest.append(inputData[i - SEQUENCE_LENGTH:i, 0])
 xTest = numpy.array(xTest)
 xTest = numpy.reshape(xTest, (xTest.shape[0], xTest.shape[1], 1))
 predictedClosingPrice = lstmModel.predict(xTest)
@@ -84,8 +90,8 @@ predictedClosingPrice = minMaxScaler.inverse_transform(predictedClosingPrice)
 lstmModel.save(MODEL_OUTPUT_FILE)
 
 # 9. Visualize the predicted stock costs with actual stock costs:
-trainData = newDataset[:987]
-validData = newDataset[987:]
+trainData = newDataset[:DATA_RANGE]
+validData = newDataset[DATA_RANGE:]
 validData[PREDICTIONS] = predictedClosingPrice
 pyplot.plot(trainData[CLOSE_COLUMN])
 pyplot.plot(validData[[CLOSE_COLUMN, PREDICTIONS]])
