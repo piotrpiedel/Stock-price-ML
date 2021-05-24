@@ -1,12 +1,12 @@
 import pandas as pandas
 
-DATA_SOURCE = "NSE-Tata-Global-Beverages-Limited.csv"
 FORMAT_DATE = "%Y-%m-%d"
-MODEL_OUTPUT_FILE = "saved_model.h5"
-PREDICTIONS = "Predictions"
-CLOSE = "Close"
-UNITS = 70
+DATA_SOURCE = "NSE-Tata-Global-Beverages-Limited.csv"
+CLOSE_COLUMN = "Close"
 DATE_COLUMN = "Date"
+PREDICTIONS = "Predictions"
+UNITS = 70
+MODEL_OUTPUT_FILE = "saved_model.h5"
 
 pandas.options.mode.chained_assignment = None  # default='warn'
 import numpy as numpy
@@ -27,14 +27,14 @@ dataFrame.head()
 dataFrame[DATE_COLUMN] = pandas.to_datetime(dataFrame.Date, format=FORMAT_DATE)
 dataFrame.index = dataFrame['Date']  # x axis for plot
 pyplot.figure(figsize=(20, 10))  # size of plot
-pyplot.plot(dataFrame[CLOSE], label='Close Price history')
+pyplot.plot(dataFrame[CLOSE_COLUMN], label='Close Price history')
 
 # Sort the dataset on date time and filter “Date” and “Close” columns:
 data = dataFrame.sort_index(ascending=True)
-newDataset = pandas.DataFrame(index=range(0, len(dataFrame)), columns=[DATE_COLUMN, CLOSE])
+newDataset = pandas.DataFrame(index=range(0, len(dataFrame)), columns=[DATE_COLUMN, CLOSE_COLUMN])
 for i in range(0, len(data)):
     newDataset[DATE_COLUMN][i] = data[DATE_COLUMN][i]
-    newDataset[CLOSE][i] = data[CLOSE][i]
+    newDataset[CLOSE_COLUMN][i] = data[CLOSE_COLUMN][i]
 
 # 5. Normalize the new filtered dataset:
 newDataset.index = newDataset.Date
@@ -80,5 +80,5 @@ lstmModel.save(MODEL_OUTPUT_FILE)
 trainData = newDataset[:987]
 validData = newDataset[987:]
 validData[PREDICTIONS] = predictedClosingPrice
-pyplot.plot(trainData[CLOSE])
-pyplot.plot(validData[[CLOSE, PREDICTIONS]])
+pyplot.plot(trainData[CLOSE_COLUMN])
+pyplot.plot(validData[[CLOSE_COLUMN, PREDICTIONS]])
