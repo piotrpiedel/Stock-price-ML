@@ -1,8 +1,16 @@
-import pandas as pd
+import pandas as pandas
 
-pd.options.mode.chained_assignment = None  # default='warn'
-import numpy as np
-import matplotlib.pyplot as plt
+DATA_SOURCE = "NSE-Tata-Global-Beverages-Limited.csv"
+FORMAT_DATE = "%Y-%m-%d"
+MODEL_OUTPUT_FILE = "saved_model.h5"
+PREDICTIONS = "Predictions"
+CLOSE = "Close"
+UNITS = 70
+DATE_COLUMN = "Date"
+
+pandas.options.mode.chained_assignment = None  # default='warn'
+import numpy as numpy
+import matplotlib.pyplot as pyplot
 # %matplotlib inline
 from matplotlib.pylab import rcParams
 
@@ -12,64 +20,65 @@ from keras.layers import LSTM, Dense
 from sklearn.preprocessing import MinMaxScaler
 
 # Read the dataset
-dataFrame = pd.read_csv("NSE-Tata-Global-Beverages-Limited.csv")
+dataFrame = pandas.read_csv(DATA_SOURCE)
 dataFrame.head()
 
 # Analyze the closing prices from dataframe
-dataFrame["Date"] = pd.to_datetime(dataFrame.Date, format="%Y-%m-%d")
+dataFrame[DATE_COLUMN] = pandas.to_datetime(dataFrame.Date, format=FORMAT_DATE)
 dataFrame.index = dataFrame['Date']  # x axis for plot
-plt.figure(figsize=(20, 10))  # size of plot
-plt.plot(dataFrame["Close"], label='Close Price history')
+pyplot.figure(figsize=(20, 10))  # size of plot
+pyplot.plot(dataFrame[CLOSE], label='Close Price history')
 
 # Sort the dataset on date time and filter “Date” and “Close” columns:
 data = dataFrame.sort_index(ascending=True)
-new_dataset = pd.DataFrame(index=range(0, len(dataFrame)), columns=['Date', 'Close'])
+newDataset = pandas.DataFrame(index=range(0, len(dataFrame)), columns=[DATE_COLUMN, CLOSE])
 for i in range(0, len(data)):
-    new_dataset["Date"][i] = data['Date'][i]
-    new_dataset["Close"][i] = data["Close"][i]
+    newDataset[DATE_COLUMN][i] = data[DATE_COLUMN][i]
+    newDataset[CLOSE][i] = data[CLOSE][i]
 
 # 5. Normalize the new filtered dataset:
-new_dataset.index = new_dataset.Date
-new_dataset.drop("Date", axis=1, inplace=True)  # remove  column date normalization
-final_dataset = new_dataset.values
-train_data = final_dataset[0:987, :]
-valid_data = final_dataset[987:, :]
-scaler = MinMaxScaler(feature_range=(0, 1))
-scaled_data = scaler.fit_transform(final_dataset)
-x_train_data, y_train_data = [], []
-for i in range(60, len(train_data)):
-    x_train_data.append(scaled_data[i - 60:i, 0])
-    y_train_data.append(scaled_data[i, 0])
+newDataset.index = newDataset.Date
+newDataset.drop(DATE_COLUMN, axis=1, inplace=True)  # remove  column date normalization
+finalDataset = newDataset.values
+trainData = finalDataset[0:987, :]
+validData = finalDataset[987:, :]
+minMaxScaler = MinMaxScaler(feature_range=(0, 1))
+scaledData = minMaxScaler.fit_transform(finalDataset)
+xTrainData, yTrainData = [], []
+for i in range(60, len(trainData)):
+    xTrainData.append(scaledData[i - 60:i, 0])
+    yTrainData.append(scaledData[i, 0])
 
-x_train_data, y_train_data = np.array(x_train_data), np.array(y_train_data)
-x_train_data = np.reshape(x_train_data, (x_train_data.shape[0], x_train_data.shape[1], 1))
+xTrainData, yTrainData = numpy.array(xTrainData), numpy.array(yTrainData)
+xTrainData = numpy.reshape(xTrainData, (xTrainData.shape[0], xTrainData.shape[1], 1))
 
 # 6. Build and train the LSTM model:
-lstm_model = Sequential()
-lstm_model.add(LSTM(units=50, return_sequences=True, input_shape=(x_train_data.shape[1], 1)))
-lstm_model.add(LSTM(units=50))
-lstm_model.add(Dense(1))
-inputs_data = new_dataset[len(new_dataset) - len(valid_data) - 60:].values
-inputs_data = inputs_data.reshape(-1, 1)
-inputs_data = scaler.transform(inputs_data)
-lstm_model.compile(loss='mean_squared_error', optimizer='adam')
-lstm_model.fit(x_train_data, y_train_data, epochs=1, batch_size=1, verbose=2)
+lstmModel = Sequential()
+lstmModel.add(LSTM(units=UNITS, return_sequences=True, input_shape=(xTrainData.shape[1], 1)))
+lstmModel.add(LSTM(units=UNITS))
+lstmModel.add(Dense(1))
+
+inputData = newDataset[len(newDataset) - len(validData) - 60:].values
+inputData = inputData.reshape(-1, 1)
+inputData = minMaxScaler.transform(inputData)
+lstmModel.compile(loss='mean_squared_error', optimizer='adam')
+lstmModel.fit(xTrainData, yTrainData, epochs=1, batch_size=1, verbose=2)
 
 # 7. Take a sample of a dataset to make stock price predictions using the LSTM model:
-X_test = []
-for i in range(60, inputs_data.shape[0]):
-    X_test.append(inputs_data[i - 60:i, 0])
-X_test = np.array(X_test)
-X_test = np.reshape(X_test, (X_test.shape[0], X_test.shape[1], 1))
-predicted_closing_price = lstm_model.predict(X_test)
-predicted_closing_price = scaler.inverse_transform(predicted_closing_price)
+xTest = []
+for i in range(60, inputData.shape[0]):
+    xTest.append(inputData[i - 60:i, 0])
+xTest = numpy.array(xTest)
+xTest = numpy.reshape(xTest, (xTest.shape[0], xTest.shape[1], 1))
+predictedClosingPrice = lstmModel.predict(xTest)
+predictedClosingPrice = minMaxScaler.inverse_transform(predictedClosingPrice)
 
 # 8. Save the LSTM model:
-lstm_model.save("saved_model.h5")
+lstmModel.save(MODEL_OUTPUT_FILE)
 
 # 9. Visualize the predicted stock costs with actual stock costs:
-train_data = new_dataset[:987]
-valid_data = new_dataset[987:]
-valid_data['Predictions'] = predicted_closing_price
-plt.plot(train_data["Close"])
-plt.plot(valid_data[['Close', "Predictions"]])
+trainData = newDataset[:987]
+validData = newDataset[987:]
+validData[PREDICTIONS] = predictedClosingPrice
+pyplot.plot(trainData[CLOSE])
+pyplot.plot(validData[[CLOSE, PREDICTIONS]])
