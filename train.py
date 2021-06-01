@@ -1,12 +1,12 @@
 FORMAT_DATE = "%Y-%m-%d"
-DATA_SOURCE = "NSE-Tata-Global-Beverages-Limited.csv"
+DATA_SOURCE = "Canada Bank 5 years.csv"
 CLOSE_COLUMN = "Close"
 DATE_COLUMN = "Date"
 PREDICTIONS = "Predictions"
-MODEL_OUTPUT_FILE = "saved_model.h5"
+MODEL_OUTPUT_FILE = "lstm_model.h5"
 PLOT_LABEL = 'Close Price history'
 UNITS = 70
-DATA_RANGE = 987
+DATA_RANGE = 1000
 SEQUENCE_LENGTH = 60
 
 import pandas as pandas
