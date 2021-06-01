@@ -119,8 +119,7 @@ lstmModel.compile(loss='mean_squared_error', optimizer='adam')
 lstmModel.fit(xTrainData, yTrainData, epochs=1, batch_size=1, verbose=2)
 
 # 7. Take a sample of a dataset to make stock price predictions using the LSTM model:
-xTest = []
-prepareDataForModelValidation(inputData)
+xTest = prepareDataForModelValidation(inputData)
 
 predictedClosingPrice = predictClosingPrice(lstmModel)
 
