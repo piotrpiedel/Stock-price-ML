@@ -57,14 +57,14 @@ def normalizeInput():
     return data_train, scaled_data, valid_data, min_max_scaler
 
 
-def prepareTimeSeriesForModel(xTrain, yTrain, trainLength):
+def getTimeSeriesAndTargetForTraining(xTrain, yTrain, trainLength):
     for i in range(SEQUENCE_LENGTH, trainLength):
         xTrain.append(scaledData[i - SEQUENCE_LENGTH:i, 0])
         yTrain.append(scaledData[i, 0])
     return xTrain, yTrain
 
 
-def prepareDataForModelValidation(input_data):
+def prepareTimeSeriesForPrediction(input_data):
     x_test = []
     for i in range(SEQUENCE_LENGTH, input_data.shape[0]):
         x_test.append(input_data[i - SEQUENCE_LENGTH:i, 0])
@@ -100,7 +100,7 @@ newDataset = createRawDataFrame()
 # 5. Normalize the new filtered dataset:
 trainData, scaledData, validData, minMaxScaler = normalizeInput()
 xTrainData, yTrainData = [], []
-prepareTimeSeriesForModel(xTrainData, yTrainData, len(trainData))
+getTimeSeriesAndTargetForTraining(xTrainData, yTrainData, len(trainData))
 xTrainData, yTrainData = numpy.array(xTrainData), numpy.array(yTrainData)
 xTrainData = numpy.reshape(xTrainData, (xTrainData.shape[0], xTrainData.shape[1], 1))
 
@@ -111,7 +111,7 @@ inputData = inputData.reshape(-1, 1)
 inputData = minMaxScaler.transform(inputData)
 
 # 7. Take a sample of a dataset to make stock price predictions using the LSTM model:
-xTest = prepareDataForModelValidation(inputData)
+xTest = prepareTimeSeriesForPrediction(inputData)
 
 predictedClosingPrice = predictClosingPrice(lstmModel)
 
