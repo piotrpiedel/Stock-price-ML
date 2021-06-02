@@ -114,7 +114,7 @@ getTimeSeriesAndTargetForTraining(xTrainData, yTrainData, len(trainData))
 xTrainData, yTrainData = numpy.array(xTrainData), numpy.array(yTrainData)
 xTrainData = numpy.reshape(xTrainData, (xTrainData.shape[0], xTrainData.shape[1], 1))
 
-# Build LSTM model and train with primary data
+# Create LSTM model and train with primary data
 lstmModel = buildLstmModel()
 inputData = newDataset[len(newDataset) - len(validData) - SEQUENCE_LENGTH:].values
 inputData = inputData.reshape(-1, 1)
@@ -130,6 +130,6 @@ predictedClosingPrice = predictClosingPrice(lstmModel)
 # Saving LSTM model to file for future use:
 lstmModel.save(MODEL_OUTPUT_FILE)
 
-# Building and displaying plot using predicted stock costs comparing to actual stock costs:
+# Create and display plot using predicted stock costs comparing to actual stock costs:
 trainData, validData = configureDataForPredictionChart(newDataset, predictedClosingPrice)
 displayPredictionChart(trainData, validData)
