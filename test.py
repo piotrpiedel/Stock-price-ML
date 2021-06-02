@@ -13,7 +13,7 @@ SEQUENCE_LENGTH = 60
 
 import pandas as pandas
 import math
-pandas.options.mode.chained_assignment = None  # default='warn'
+pandas.options.mode.chained_assignment = None
 import numpy as numpy
 import matplotlib.pyplot as pyplot
 from matplotlib.pylab import rcParams as plotParameters
@@ -22,19 +22,18 @@ from sklearn.metrics import mean_squared_error
 
 plotParameters['figure.figsize'] = 20, 10
 
-# Read the dataset
+# Load data set using pandas library data frame (two dimensional data structure)
 dataFrame = pandas.read_csv(DATA_SOURCE)
 dataFrame.head()
 
 
-# Analyze the closing prices from dataframe
 def prepareDataset():
     dataFrame[DATE_COLUMN] = pandas.to_datetime(dataFrame.Date, format=FORMAT_DATE)
     dataFrame.index = dataFrame['Date']  # x axis for plot
 
 
 def displayDataset():
-    pyplot.figure(figsize=(20, 10))  # size of plot
+    pyplot.figure(figsize=(20, 10))  # set size of plot
     pyplot.plot(dataFrame[CLOSE_COLUMN], label=PLOT_LABEL)
 
 
@@ -93,29 +92,33 @@ def displayPredictionChart(train, valid):
 
 prepareDataset()
 displayDataset()
-# Sort the dataset on date time and filter “Date” and “Close” columns:
+
+# Sort data set by date and filter by “Date” & “Close” columns
 data = dataFrame.sort_index(ascending=True)
 newDataset = createRawDataFrame()
 
-# 5. Normalize the new filtered dataset:
+# Normalize data set input using MinMaxScaler to fit between zero and one
+# MinMaxScaler transformation:
+# X_std = (X - X.min(axis=0)) / (X.max(axis=0) - X.min(axis=0))
+# X_scaled = X_std * (max - min) + min
 trainData, scaledData, validData, minMaxScaler = normalizeInput()
 xTrainData, yTrainData = [], []
 getTimeSeriesAndTargetForTraining(xTrainData, yTrainData, len(trainData))
 xTrainData, yTrainData = numpy.array(xTrainData), numpy.array(yTrainData)
 xTrainData = numpy.reshape(xTrainData, (xTrainData.shape[0], xTrainData.shape[1], 1))
 
-# 6. Load LSTM model:
+# Build LSTM model using trained model on primary data
 lstmModel = keras.models.load_model(MODEL_OUTPUT_FILE)
 inputData = newDataset[len(newDataset) - len(validData) - SEQUENCE_LENGTH:].values
 inputData = inputData.reshape(-1, 1)
 inputData = minMaxScaler.transform(inputData)
 
-# 7. Take a sample of a dataset to make stock price predictions using the LSTM model:
+# Take a sample of a dataset to make stock price predictions using the LSTM model:
 xTest = prepareTimeSeriesForPrediction(inputData)
 
 predictedClosingPrice = predictClosingPrice(lstmModel)
 
-# 9. Visualize the predicted stock costs with actual stock costs:
+# Building and displaying plot using predicted stock costs comparing to actual stock costs:
 trainData, validData = configureDataForPredictionChart(newDataset, predictedClosingPrice)
 displayPredictionChart(trainData, validData)
 
