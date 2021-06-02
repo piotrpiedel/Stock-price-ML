@@ -127,7 +127,7 @@ xTest = prepareTimeSeriesForPrediction(inputData)
 
 predictedClosingPrice = predictClosingPrice(lstmModel)
 
-# Saving LSTM model to file for future use:
+# Save LSTM model to file for future use:
 lstmModel.save(MODEL_OUTPUT_FILE)
 
 # Create and display plot using predicted stock costs comparing to actual stock costs:
