@@ -1,9 +1,9 @@
 FORMAT_DATE = "%Y-%m-%d"
-DATA_SOURCE = "Canada Bank 5 years.csv" # primary train data
+DATA_SOURCE = "data_source/Canada Bank 5 years.csv"  # primary train data
 CLOSE_COLUMN = "Close"
 DATE_COLUMN = "Date"
 PREDICTIONS = "Predictions"
-MODEL_OUTPUT_FILE = "lstm_model.h5"
+MODEL_OUTPUT_FILE = "trained_model/lstm_model.h5"
 PLOT_LABEL = 'Close Price history'
 UNITS = 70
 DATA_RANGE = 1000
@@ -32,7 +32,7 @@ def prepareDataset():
 
 
 def displayDataset():
-    pyplot.figure(figsize=(20, 10))   # set size of plot
+    pyplot.figure(figsize=(20, 10))  # set size of plot
     pyplot.plot(dataFrame[CLOSE_COLUMN], label=PLOT_LABEL)
 
 

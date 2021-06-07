@@ -1,11 +1,11 @@
 import keras.models
 
 FORMAT_DATE = "%Y-%m-%d"
-DATA_SOURCE = "Microsoft 5 years.csv" # Gold, Apple, Gamestop
+DATA_SOURCE = "data_source/Microsoft 5 years.csv"  # Gold, Apple, Gamestop
 CLOSE_COLUMN = "Close"
 DATE_COLUMN = "Date"
 PREDICTIONS = "Predictions"
-MODEL_OUTPUT_FILE = "lstm_model.h5"
+MODEL_OUTPUT_FILE = "trained_model/lstm_model.h5"
 PLOT_LABEL = 'Close Price history'
 UNITS = 70
 DATA_RANGE = 100
@@ -13,6 +13,7 @@ SEQUENCE_LENGTH = 60
 
 import pandas as pandas
 import math
+
 pandas.options.mode.chained_assignment = None
 import numpy as numpy
 import matplotlib.pyplot as pyplot
